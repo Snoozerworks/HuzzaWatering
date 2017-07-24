@@ -30,8 +30,8 @@ public:
 			prm(id), //
 			low(lo), //
 			high(hi), //
-			val(init_val), //
-			eeprom_pos(id * sizeof(init_val)) {
+			eeprom_pos(id * sizeof(init_val)), //
+			val(init_val) {
 	}
 
 	void set(unsigned long new_val);
@@ -44,10 +44,10 @@ public:
 
 private:
 	prmid_t prm; // Index in parameter array.
-	unsigned long low; // Upper bound.
-	unsigned long high; // Lower bound.
+	const unsigned long low; // Upper bound.
+	const unsigned long high; // Lower bound.
+	const unsigned long eeprom_pos; // eeprom offset position
 	unsigned long val; // Parameter value.
-	unsigned long eeprom_pos; // eeprom offset position
 
 };
 

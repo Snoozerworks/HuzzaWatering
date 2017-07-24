@@ -25,13 +25,13 @@ public:
 	Parameter pumped3 { PRM::P3_PUMPED_VOL, 0, -1UL, 0 }; // Pumped volume in cc
 
 	Parameter tankvol { PRM::TANK_VOL, 0, -1UL, 0 }; // Tank volume in cm^3
-	Parameter run_interval { PRM::RUN_INTERVAL, 0, -1UL, 0 }; // Pump run interval in seconds
-	Parameter refresh { PRM::REFRESH_RATE, 0, -1UL, 5 }; // Server connection interval in seconds
+	Parameter run_interval { PRM::RUN_INTERVAL, 0, -1UL, 3600 }; // Pump run interval in seconds
+	Parameter refresh { PRM::REFRESH_RATE, 0, -1UL, 10000 }; // Server connection interval in milliseconds
 
-	Parameter adc1 { PRM::ADC1, 0, 0, 1023 }; // ADC1 value
-	Parameter adc2 { PRM::ADC2, 0, 0, 1023 }; // ADC2 value
-	Parameter adc3 { PRM::ADC3, 0, 0, 1023 }; // ADC3 value
-	Parameter adc4 { PRM::ADC4, 0, 0, 1023 }; // ADC4 value
+	Parameter adc1 { PRM::ADC1, 0, 1023, 0 }; // ADC1 value
+	Parameter adc2 { PRM::ADC2, 0, 1023, 0 }; // ADC2 value
+	Parameter adc3 { PRM::ADC3, 0, 1023, 0 }; // ADC3 value
+	Parameter adc4 { PRM::ADC4, 0, 1023, 0 }; // ADC4 value
 
 	Pump p1 { PINS::PUMP1, &p1_flow, &p1_rqst_vol, &pumped1, &run_interval };
 	Pump p2 { PINS::PUMP2, &p2_flow, &p2_rqst_vol, &pumped2, &run_interval };

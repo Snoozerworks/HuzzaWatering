@@ -56,8 +56,8 @@ const prmid_t REFRESH_RATE = 0x0C;
 const prmid_t ADC1 = 0x0D;
 const prmid_t ADC2 = 0x0E;
 const prmid_t ADC3 = 0x0F;
-const prmid_t ADC4 = 0xA0;
-const prmid_t _END = 0xA1;
+const prmid_t ADC4 = 0x10;
+const prmid_t _END = 0x11;
 }
 
 namespace WIFI {
@@ -66,9 +66,9 @@ char const * const ssid = "Gris";
 char const* const password = "isterband";
 char const * const host = "www.skarmflyg.org";
 char const * const download_url =
-		"http://www.skarmflyg.org/_temp/HuzzaWeb/download.php";
+		"http://www.skarmflyg.org/_temp/HuzzaWatering/download.php";
 char const * const upload_url =
-		"http://www.skarmflyg.org/_temp/HuzzaWeb/upload.php";
+		"http://www.skarmflyg.org/_temp/HuzzaWatering/upload.php";
 const unsigned int WIFI_RX_TIMEOUT = 5000;	// 10 seconds
 const byte http_port = 80;
 }

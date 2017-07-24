@@ -38,11 +38,12 @@ MachineState::MachineState() {
 bool MachineState::parseParamGetRequest(WiFiClient * const stream) {
 	prmid_t prm_id;
 
+	Serial.print("\tPrm=");
 	while (stream->available()) {
 		// Extract parameter
 		prm_id = stream->read();
-		Serial.print("  Prm=");
-		Serial.println(prm_id, DEC);
+		Serial.print(prm_id, DEC);
+		Serial.print(' ');
 
 		if (prm_id >= PRM::_END) {
 			// Unknown command
@@ -74,11 +75,10 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 	prmid_t prm_id;
 	byte msg_buffer[4];
 
+	Serial.print("\t(Prm,Val)=");
 	while (stream->available()) {
 		// Extract parameter
 		prm_id = stream->read();
-		Serial.print("  Prm=");
-		Serial.print(prm_id, DEC);
 
 		if (prm_id >= PRM::_END) {
 			// Unknown parameter
@@ -88,7 +88,6 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 
 		// Stop at the NONE parameter
 		if (prm_id == PRM::NONE) {
-			Serial.println("");
 			return true;
 		}
 
@@ -111,13 +110,18 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 		val += msg_buffer[1] << 16;
 		val += msg_buffer[2] << 8;
 		val += msg_buffer[3];
-		Serial.print("\tVal=");
-		Serial.println(val, DEC);
+
+
+		Serial.print('(');
+		Serial.print(prm_id, DEC);
+		Serial.print(',');
+		Serial.print(val, DEC);
+		Serial.print(") ");
+
 		params[prm_id]->set(val);
 
 		delay(1);
 	}
-	Serial.println("");
 	return false;
 }
 
@@ -137,7 +141,7 @@ void MachineState::uploadToServer() {
 	unsigned short byteno;
 	HTTPClient http;
 
-	Serial.println("Upload");
+	Serial.print("Upload");
 
 	http.setTimeout(WIFI::WIFI_RX_TIMEOUT);
 	http.begin(WIFI::upload_url);
@@ -155,33 +159,35 @@ void MachineState::uploadToServer() {
 			val = params[k]->get();
 
 			buffer[++byteno] = k;
-			Serial.print("  Prm=");
-			Serial.print(k, DEC);
+			//Serial.print("\t Upload val");
 
 			buffer[++byteno] = (byte) (val >> 24);
 			buffer[++byteno] = (byte) (val >> 16);
 			buffer[++byteno] = (byte) (val >> 8);
 			buffer[++byteno] = (byte) val;
 
-//				Serial.print("\tHEX=");
-//				Serial.print(k, HEX);
-//				Serial.print(' ');
-//				Serial.print(buffer[byteno - 3], HEX);
-//				Serial.print(' ');
-//				Serial.print(buffer[byteno - 2], HEX);
-//				Serial.print(' ');
-//				Serial.print(buffer[byteno - 1], HEX);
-//				Serial.print(' ');
-//				Serial.print(buffer[byteno], HEX);
-			Serial.print("\tVal=");
-			Serial.println(val, DEC);
+			//Serial.print("\tHEX=");
+			//Serial.print(k, HEX);
+			//Serial.print(' ');
+			//Serial.print(buffer[byteno - 3], HEX);
+			//Serial.print(' ');
+			//Serial.print(buffer[byteno - 2], HEX);
+			//Serial.print(' ');
+			//Serial.print(buffer[byteno - 1], HEX);
+			//Serial.print(' ');
+			//Serial.print(buffer[byteno], HEX);
+			//
+			//Serial.print("\tPrm=");
+			//Serial.print(k, DEC);
+			//Serial.print("\tval=");
+			//Serial.print(val, DEC);
 		}
 	}
 	buffer[++byteno] = (byte) PRM::NONE;
 
 	++byteno;
 	if (byteno > sizeof(buffer)) {
-		Serial.println("** buffer overrun");
+		Serial.print(" **buffer overrun");
 		byteno = sizeof(buffer);
 	}
 
@@ -189,14 +195,14 @@ void MachineState::uploadToServer() {
 	if (byteno > 2) {
 		int http_code = http.POST((uint8_t *) buffer, (size_t) byteno);
 
+		Serial.print(", http code: ");
+		Serial.print(http_code, DEC);
+		Serial.print(", bytes sent: ");
 		Serial.print(byteno, DEC);
-		Serial.print(" bytes sent.");
-		Serial.print(" Http code: ");
-		Serial.println(http_code, DEC);
 
 		// Check server response
 		if (http_code != HTTP_CODE_OK) {
-			Serial.println(". Download failed");
+			Serial.print(", **failed");
 
 		} else {
 			String response_str;
@@ -210,7 +216,7 @@ void MachineState::uploadToServer() {
 
 	}
 
-	Serial.println("Done");
+	Serial.println("\nDone upload");
 	http.end();
 
 }
@@ -221,19 +227,19 @@ void MachineState::uploadToServer() {
 void MachineState::downloadFromServer() {
 	cmdid_t cmd_id;
 
-	Serial.println("Download");
+	Serial.print("Download");
 
 	HTTPClient http;
 	http.setTimeout(WIFI::WIFI_RX_TIMEOUT);
 	http.begin(WIFI::download_url);
 
 	int http_code = http.GET();
-	Serial.print("Http code: ");
-	Serial.println(http_code, DEC);
+	Serial.print(", http code: ");
+	Serial.print(http_code, DEC);
 
 	// file found at server
 	if (http_code != HTTP_CODE_OK) {
-		Serial.println("Download failed");
+		Serial.print(", **failed");
 		http.end();
 		return;
 	}
@@ -249,8 +255,8 @@ void MachineState::downloadFromServer() {
 
 		// Retrive command
 		cmd_id = stream->read();
-		Serial.print("Cmd ");
-		Serial.println(cmd_id, DEC);
+		Serial.print("\nCmd ");
+		Serial.print(cmd_id, DEC);
 
 		// Parse data for command
 		if (cmd_id == CMD::SET) {
@@ -275,7 +281,7 @@ void MachineState::downloadFromServer() {
 		delay(1);
 	}
 
-	Serial.println("Stream done");
+	Serial.println("\nDone download");
 	stream->stop();
 	http.end();
 }
@@ -308,30 +314,40 @@ void MachineState::run(unsigned long now) {
  */
 void MachineState::readADC(prmid_t pid) {
 
-	if (pid & ~(PRM::ADC1 | PRM::ADC2 | PRM::ADC3 | PRM::ADC4)) {
-		// pid is not a ADC parameter
-		return;
+	switch (pid) {
+	case PRM::ADC1:
+	case PRM::ADC2:
+	case PRM::ADC3:
+	case PRM::ADC4:
+		digitalWrite(PINS::MPX_EN, LOW); 	// Enable mutiplexer
+		break;
+	default:
+		return; // pid is not a ADC parameter
 	}
 
-	digitalWrite(PINS::MPX_EN, LOW); 	// Enable mutiplexer
+	// Mutiplexer S0 low for ADC 1 and 3
+	switch (pid) {
+	case PRM::ADC1:
+	case PRM::ADC3:
+		digitalWrite(PINS::MPX_S0, LOW);
+		break;
+	default:
+		digitalWrite(PINS::MPX_S0, HIGH);
+	}
 
-	if (pid == PRM::ADC1) {				// Select mutiplexre input...
-		digitalWrite(PINS::MPX_S0, LOW);
+	// Mutiplexer S1 low for ADC 1 and 2
+	switch (pid) {
+	case PRM::ADC1:
+	case PRM::ADC2:
 		digitalWrite(PINS::MPX_S1, LOW);
-	} else if (pid == PRM::ADC2) {
-		digitalWrite(PINS::MPX_S0, HIGH);
-		digitalWrite(PINS::MPX_S1, LOW);
-	} else if (pid == PRM::ADC3) {
-		digitalWrite(PINS::MPX_S0, LOW);
-		digitalWrite(PINS::MPX_S1, HIGH);
-	} else if (pid == PRM::ADC4) {
-		digitalWrite(PINS::MPX_S0, HIGH);
+		break;
+	default:
 		digitalWrite(PINS::MPX_S1, HIGH);
 	}
 
-	delay(2); 							// Let mutiplexer settle
-	params[pid]->set(analogRead(A0)); 	// Read voltage
-	digitalWrite(PINS::MPX_EN, LOW); 	// Disable mutiplexer
+	delay(10);			// Let analogue value settle (not sure if needed)
+	params[pid]->set(analogRead(A0)); // Read and save voltage in parameter
+	digitalWrite(PINS::MPX_EN, HIGH); 	// Disable mutiplexer
 }
 
 /**
@@ -339,9 +355,10 @@ void MachineState::readADC(prmid_t pid) {
  */
 void MachineState::reportFault(byte err, String err_msg) {
 	if (Serial) {
-		Serial.print("Err ");
+		Serial.println();
+		Serial.print("**Err ");
 		Serial.print(err, DEC);		// Error code
 		Serial.print(" : ");
-		Serial.println(err_msg); 	// Error message
+		Serial.println(err_msg);		// Error message
 	}
 }

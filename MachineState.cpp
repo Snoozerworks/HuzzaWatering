@@ -111,7 +111,6 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 		val += msg_buffer[2] << 8;
 		val += msg_buffer[3];
 
-
 		Serial.print('(');
 		Serial.print(prm_id, DEC);
 		Serial.print(',');
@@ -129,13 +128,14 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
  * Upload flagged parameters to server.
  *
  * Parameters are sent as a byte stream like;
+ * - first 3 bytes is the ESP8266 chip id.
  * - first byte is the command CMD::SET
  * - Then in sequences of five bytes b0 to b4. Byte b0 is the parameter
  * id followed by its value b1 (MSB) to b4.
  * - last byte is the command CMD::NONE
  */
 void MachineState::uploadToServer() {
-	const unsigned short content_lenght = (PRM::_END - 1) * 5 + 2;
+	const unsigned short content_lenght = (PRM::_END - 1) * 5 + 5;
 	byte buffer[content_lenght];
 	unsigned long val;
 	unsigned short byteno;
@@ -146,9 +146,18 @@ void MachineState::uploadToServer() {
 	http.setTimeout(WIFI::WIFI_RX_TIMEOUT);
 	http.begin(WIFI::upload_url);
 
-	// Prepare data buffer
 	byteno = 0;
-	buffer[byteno] = CMD::SET;
+
+	// Add chip id to data buffer
+	val = ESP.getChipId();
+	buffer[byteno] = (byte) (val >> 16);
+	buffer[++byteno] = (byte) (val >> 8);
+	buffer[++byteno] = (byte) val;
+
+	// Add command to data buffer
+	buffer[++byteno] = CMD::SET;
+
+	// Add parameters to data buffer
 	for (byte k = 0; k < PRM::_END; k++) {
 		if (params[k] && params[k]->upload) {
 

@@ -141,7 +141,7 @@ void MachineState::uploadToServer() {
 	unsigned short byteno;
 	HTTPClient http;
 
-	Serial.print("Upload");
+	Serial.print("\nUpload");
 
 	http.setTimeout(WIFI::WIFI_RX_TIMEOUT);
 	http.begin(WIFI::upload_url);
@@ -168,35 +168,17 @@ void MachineState::uploadToServer() {
 			val = params[k]->get();
 
 			buffer[++byteno] = k;
-			//Serial.print("\t Upload val");
-
 			buffer[++byteno] = (byte) (val >> 24);
 			buffer[++byteno] = (byte) (val >> 16);
 			buffer[++byteno] = (byte) (val >> 8);
 			buffer[++byteno] = (byte) val;
-
-			//Serial.print("\tHEX=");
-			//Serial.print(k, HEX);
-			//Serial.print(' ');
-			//Serial.print(buffer[byteno - 3], HEX);
-			//Serial.print(' ');
-			//Serial.print(buffer[byteno - 2], HEX);
-			//Serial.print(' ');
-			//Serial.print(buffer[byteno - 1], HEX);
-			//Serial.print(' ');
-			//Serial.print(buffer[byteno], HEX);
-			//
-			//Serial.print("\tPrm=");
-			//Serial.print(k, DEC);
-			//Serial.print("\tval=");
-			//Serial.print(val, DEC);
 		}
 	}
 	buffer[++byteno] = (byte) PRM::NONE;
 
 	++byteno;
 	if (byteno > sizeof(buffer)) {
-		Serial.print(" **buffer overrun");
+		Serial.print("\n**buffer overrun");
 		byteno = sizeof(buffer);
 	}
 
@@ -204,7 +186,7 @@ void MachineState::uploadToServer() {
 	if (byteno > 2) {
 		int http_code = http.POST((uint8_t *) buffer, (size_t) byteno);
 
-		Serial.print(", http code: ");
+		Serial.print("\nHttp code: ");
 		Serial.print(http_code, DEC);
 		Serial.print(", bytes sent: ");
 		Serial.print(byteno, DEC);
@@ -236,14 +218,14 @@ void MachineState::uploadToServer() {
 void MachineState::downloadFromServer() {
 	cmdid_t cmd_id;
 
-	Serial.print("Download");
+	Serial.print("\nDownload");
 
 	HTTPClient http;
 	http.setTimeout(WIFI::WIFI_RX_TIMEOUT);
 	http.begin(WIFI::download_url);
 
 	int http_code = http.GET();
-	Serial.print(", http code: ");
+	Serial.print("\nHttp code: ");
 	Serial.print(http_code, DEC);
 
 	// file found at server
@@ -365,8 +347,7 @@ void MachineState::readADC(prmid_t pid) {
  */
 void MachineState::reportFault(byte err, String err_msg) {
 	if (Serial) {
-		Serial.println();
-		Serial.print("**Err ");
+		Serial.print("\n**Err ");
 		Serial.print(err, DEC);		// Error code
 		Serial.print(" : ");
 		Serial.println(err_msg);		// Error message

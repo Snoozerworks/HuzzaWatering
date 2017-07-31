@@ -314,40 +314,40 @@ void MachineState::run(unsigned long now) {
  */
 void MachineState::readADC(prmid_t pid) {
 
-	switch (pid) {
-	case PRM::ADC1:
-	case PRM::ADC2:
-	case PRM::ADC3:
-	case PRM::ADC4:
-		digitalWrite(PINS::MPX_EN, LOW); 	// Enable mutiplexer
-		break;
-	default:
-		return; // pid is not a ADC parameter
-	}
-
-	// Mutiplexer S0 low for ADC 1 and 3
+	// Mutiplexer S0; low for ADC 1 and 3
 	switch (pid) {
 	case PRM::ADC1:
 	case PRM::ADC3:
 		digitalWrite(PINS::MPX_S0, LOW);
 		break;
-	default:
+	case PRM::ADC2:
+	case PRM::ADC4:
 		digitalWrite(PINS::MPX_S0, HIGH);
+		break;
+	default:
+		return; // pid is not a ADC parameter
 	}
 
-	// Mutiplexer S1 low for ADC 1 and 2
+	// Mutiplexer S1; low for ADC 1 and 2
 	switch (pid) {
 	case PRM::ADC1:
 	case PRM::ADC2:
 		digitalWrite(PINS::MPX_S1, LOW);
 		break;
-	default:
+	case PRM::ADC3:
+	case PRM::ADC4:
 		digitalWrite(PINS::MPX_S1, HIGH);
+		break;
 	}
 
-	delay(10);			// Let analogue value settle (not sure if needed)
-	params[pid]->set(analogRead(A0)); // Read and save voltage in parameter
-	digitalWrite(PINS::MPX_EN, HIGH); 	// Disable mutiplexer
+	// Enable mutiplexer
+	digitalWrite(PINS::MPX_EN, LOW);
+	// Let analogue value settle (not sure if needed)
+	delay(15);
+	// Read and save voltage in parameter
+	params[pid]->set(analogRead(A0));
+	// Disable mutiplexer
+	digitalWrite(PINS::MPX_EN, HIGH);
 }
 
 /**

@@ -41,10 +41,10 @@ void setup() {
 	Serial.print("\nConnecting ");
 	WiFi.begin(WIFI::ssid, WIFI::password);
 	while (WiFi.status() != WL_CONNECTED) {
-		delay(10000);
+		delay(5000);
 		Serial.print(".");
 	}
-	delay(1000);
+	delay(100);
 	Serial.print("\nWiFi connected. IP: ");
 	Serial.println(WiFi.localIP());
 

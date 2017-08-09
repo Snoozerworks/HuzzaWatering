@@ -304,6 +304,8 @@ void MachineState::run(unsigned long now) {
  * @param pid Parameter id.
  */
 void MachineState::readADC(prmid_t pid) {
+	unsigned int val;
+	byte k;
 
 	// Select mutiplexer input
 	switch (pid) {
@@ -331,8 +333,15 @@ void MachineState::readADC(prmid_t pid) {
 	digitalWrite(PINS::MPX_EN, LOW);
 	// Let analogue value settle (not sure if needed)
 	delay(10);
-	// Read and save voltage in parameter
-	params[pid]->set(analogRead(A0));
+	// Read and save voltage in parameter. Average of 20 values.
+	val = 0;
+	k = -1;
+	while (++k < 20) {
+		val += analogRead(A0);
+	}
+	val = val / 20;
+
+	params[pid]->set(val);
 	Serial.print("\nADC ");
 	Serial.print(pid, DEC);
 	Serial.print("=");

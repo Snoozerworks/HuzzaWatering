@@ -38,17 +38,14 @@ void setup() {
 	//	M.refresh.set(10000);		// 10 seconds interval for server connections.
 
 	// Connecting to a WiFi network
-	Serial.println();
-	Serial.println("Connecting ");
+	Serial.print("\nConnecting ");
 	WiFi.begin(WIFI::ssid, WIFI::password);
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(10000);
 		Serial.print(".");
 	}
 	delay(1000);
-	Serial.println();
-	Serial.println("WiFi connected");
-	Serial.println("IP address: ");
+	Serial.print("\nWiFi connected. IP: ");
 	Serial.println(WiFi.localIP());
 
 	// Use pin PINS::SYNC as input to synchronize with server directly

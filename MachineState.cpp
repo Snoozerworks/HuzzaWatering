@@ -7,26 +7,41 @@
  * Constructor
  */
 MachineState::MachineState() {
-	params[PRM::P1_FLOW] = &p1_flow;
-	params[PRM::P2_FLOW] = &p2_flow;
-	params[PRM::P3_FLOW] = &p3_flow;
-
 	params[PRM::P1_RQST_VOL] = &p1_rqst_vol;
 	params[PRM::P2_RQST_VOL] = &p2_rqst_vol;
 	params[PRM::P3_RQST_VOL] = &p3_rqst_vol;
+
+	params[PRM::P1_FLOW] = &p1_flow;
+	params[PRM::P2_FLOW] = &p2_flow;
+	params[PRM::P3_FLOW] = &p3_flow;
 
 	params[PRM::P1_PUMPED_VOL] = &pumped1;
 	params[PRM::P2_PUMPED_VOL] = &pumped2;
 	params[PRM::P3_PUMPED_VOL] = &pumped3;
 
-	params[PRM::TANK_VOL] = &tankvol;
-	params[PRM::RUN_INTERVAL] = &run_interval;
+	params[PRM::TANK_SIZE] = &tanksize;
+	params[PRM::ONTIME] = &ontime;
 	params[PRM::REFRESH_RATE] = &refresh;
 
 	params[PRM::ADC1] = &adc1;
 	params[PRM::ADC2] = &adc2;
 	params[PRM::ADC3] = &adc3;
 	params[PRM::ADC4] = &adc4;
+
+	p1 = new Pump(PINS::PUMP1, &p1_flow, &p1_rqst_vol, &pumped1, &ontime); // Pump 1
+	p2 = new Pump(PINS::PUMP2, &p2_flow, &p2_rqst_vol, &pumped2, &ontime); // Pump 2
+	p3 = new Pump(PINS::PUMP3, &p3_flow, &p3_rqst_vol, &pumped3, &ontime); // Pump 3
+
+//	// Init requested volume to 0
+//	p1_rqst_vol.set(0);
+//	p2_rqst_vol.set(0);
+//	p3_rqst_vol.set(0);
+//
+//	// Init ADC values to 0
+//	adc1.set(0);
+//	adc2.set(0);
+//	adc3.set(0);
+//	adc4.set(0);
 }
 
 /**
@@ -38,6 +53,11 @@ MachineState::MachineState() {
 bool MachineState::parseParamGetRequest(WiFiClient * const stream) {
 	prmid_t prm_id;
 
+	if (stream == nullptr) {
+		reportFault(ERR::NULLPTR_ERR, "");
+		return false;
+	}
+
 	Serial.print("\tPrm=");
 	while (stream->available()) {
 		// Extract parameter
@@ -47,7 +67,7 @@ bool MachineState::parseParamGetRequest(WiFiClient * const stream) {
 
 		if (prm_id >= PRM::_END) {
 			// Unknown command
-			reportFault(ERR::PARAMID_GET_ERR, "param " + String(prm_id));
+			reportFault(ERR::PARAMID_GET_ERR, "Prm " + String(prm_id));
 			break;
 		}
 
@@ -75,6 +95,11 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 	prmid_t prm_id;
 	byte msg_buffer[4];
 
+	if (stream == nullptr) {
+		reportFault(ERR::NULLPTR_ERR, "");
+		return false;
+	}
+
 	Serial.print("\t(Prm,Val)=");
 	while (stream->available()) {
 		// Extract parameter
@@ -82,7 +107,7 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 
 		if (prm_id >= PRM::_END) {
 			// Unknown parameter
-			reportFault(ERR::PARAMID_SET_ERR, "param " + String(prm_id));
+			reportFault(ERR::PARAMID_SET_ERR, "Prm " + String(prm_id));
 			break;
 		}
 
@@ -240,9 +265,12 @@ void MachineState::downloadFromServer() {
 	//
 
 	WiFiClient * stream = http.getStreamPtr();
+	if (stream == nullptr) {
+		reportFault(ERR::NULLPTR_ERR, "");
+		return;
+	}
 
-	bool loop = true;
-	while (stream->available() && loop) {
+	while (stream->available()) {
 
 		// Retrive command
 		cmd_id = stream->read();
@@ -265,35 +293,37 @@ void MachineState::downloadFromServer() {
 
 		} else {
 			reportFault(ERR::BAD_COMMAND_ERR, "cmd " + String(cmd_id));
+			printErrorStream(stream);
 			break;
 
 		}
 
-		delay(1);
+		yield();
 	}
 
-	Serial.println("\nDone download");
 	stream->stop();
 	http.end();
+	Serial.println("\nDone download");
 }
 
 /**
  * Call to update state of pumps
  */
 void MachineState::run(unsigned long now) {
-	unsigned long pumped_vol;
-	unsigned int tank_vol_left;
-
-	// Get total volume pumped by all pumps
-	pumped_vol = pumped1.get() + pumped2.get() + pumped3.get();
-
-	// Remaining tank volume
-	tank_vol_left = tankvol.get() - pumped_vol;
 
 	// Run the pumps.
-	p1.run(now, tank_vol_left, p2.isOn() || p3.isOn());
-	p2.run(now, tank_vol_left, p3.isOn() || p1.isOn());
-	p3.run(now, tank_vol_left, p1.isOn() || p2.isOn());
+	yield(); // Let the ESP8266 do its thing too
+//	p1.run(now, tankVolume(), p2.isOn() || p3.isOn());
+	p1->run(now, tankVolume(), p2->isOn() || p3->isOn());
+
+	yield(); // Let the ESP8266 do its thing too
+//	p2.run(now, tankVolume(), p3.isOn() || p1.isOn());
+//	p2->run(now, tankVolume(), p3->isOn() || p1->isOn());
+//
+//	yield(); // Let the ESP8266 do its thing too
+//	p3.run(now, tankVolume(), p1.isOn() || p2.isOn());
+//
+//	yield(); // Let the ESP8266 do its thing too
 
 }
 
@@ -352,12 +382,51 @@ void MachineState::readADC(prmid_t pid) {
 }
 
 /**
+ * Returns volume left in tank .
+ */
+unsigned long MachineState::tankVolume() {
+	unsigned long pumped = pumped1.get() + pumped2.get() + pumped3.get();
+	unsigned long tsize = tanksize.get();
+	return (pumped < tsize) ? tsize - pumped : 0;
+}
+
+/**
+ * Serial print up to 150 bytes from stream for debugging. Flush the stream when
+ * done.
+ */
+void MachineState::printErrorStream(WiFiClient * const stream) {
+	int stream_data;
+	byte max_count = 150;
+
+	if (stream == nullptr) {
+		reportFault(ERR::NULLPTR_ERR, "");
+		return;
+	}
+
+	Serial.print("\nBad data=");
+	while (stream->available() && --max_count > 0) {
+		// Extract parameter
+		stream_data = stream->read();
+		if (stream_data < 0) {
+			Serial.print(stream_data);
+			break;
+		}
+		Serial.print("x");
+		Serial.print((byte) stream_data, HEX);
+		Serial.print(' ');
+		yield();
+	}
+
+	stream->flush();
+}
+
+/**
  * For debugging, prints error messages to serial is present.
  */
 void MachineState::reportFault(byte err, String err_msg) {
 	if (Serial) {
 		Serial.print("\n**Err ");
-		Serial.print(err, DEC);		// Error code
+		Serial.print(err, HEX);		// Error code
 		Serial.print(" : ");
 		Serial.println(err_msg);		// Error message
 	}

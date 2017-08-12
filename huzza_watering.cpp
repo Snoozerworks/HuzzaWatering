@@ -5,8 +5,9 @@
 #include "MachineState.h"
 
 MachineState M;
-bool manual_refresh;
-unsigned long time_last_refresh = -1;
+volatile bool manual_refresh;
+unsigned long time_last_refresh;
+unsigned long now;
 
 void onSyncPinInterrupt() {
 	// Set flag to refresh parameters from server
@@ -14,6 +15,14 @@ void onSyncPinInterrupt() {
 }
 
 void setup() {
+	Serial.begin(115200);
+	delay(50);
+	Serial.setDebugOutput(true); 	// On ESP8266, debug with serial
+
+	// Init values
+	time_last_refresh = -1UL;
+	manual_refresh = false;
+
 	// Setup gpio pins
 	pinMode(A0, INPUT);
 
@@ -25,12 +34,6 @@ void setup() {
 
 	digitalWrite(PINS::MPX_EN, HIGH); 	// Disable mutiplexer
 	digitalWrite(PINS::SERVO, LOW);		// Servo signal to 0 volt
-
-	manual_refresh = false;
-
-	Serial.begin(115200);
-	delay(100);
-	Serial.setDebugOutput(true); 	// On ESP8266, debug with serial
 
 	// Set some default values
 	//	M.tankvol.set(0);			// Initiate to empty tank.
@@ -49,11 +52,13 @@ void setup() {
 	Serial.println(WiFi.localIP());
 
 	// Use pin PINS::SYNC as input to synchronize with server directly
-	attachInterrupt(PINS::SYNC, onSyncPinInterrupt, FALLING);
+
+	attachInterrupt(digitalPinToInterrupt(PINS::SYNC), onSyncPinInterrupt,
+	FALLING);
 }
 
 void loop() {
-	unsigned long now = millis();
+	now = millis();
 
 	if ((now - time_last_refresh > M.refresh.get()) || manual_refresh) {
 		// Get parameters from server at intervals set by the refresh rate

@@ -25,14 +25,14 @@ void Parameter::set(unsigned long new_val) {
 /**
  * Get parameter value
  */
-unsigned long Parameter::get() {
+unsigned long Parameter::get() const {
 	return val;
 }
 
 /**
  * Save value to EEPROM.
  */
-void Parameter::eepromSave() {
+void Parameter::eepromSave() const {
 	EEPROM.begin(EEPROM_SIZE);
 	EEPROM.write(eeprom_pos + 0, val >> 24);
 	EEPROM.write(eeprom_pos + 1, val >> 16);

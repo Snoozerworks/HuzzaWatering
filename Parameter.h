@@ -8,9 +8,9 @@
  *
  * Each parameter is defined by
  * - uint8	prmid    : Parameter id
- * - uint32	val      : Parameter value
  * - uint32	low      : Parameter lower bound
  * - uint32	high     : Parameter higher bound
+ * - uint32	val      : Parameter value
  *
  */
 class Parameter {
@@ -25,20 +25,21 @@ public:
 	 *
 	 * Initialize with parameter id as argument.
 	 */
-	Parameter(prmid_t id, unsigned long lo, unsigned long hi,
-			unsigned long init_val) :
+	Parameter(prmid_t id, unsigned long lo, unsigned long hi) :
 			prm(id), //
 			low(lo), //
 			high(hi), //
-			eeprom_pos(id * sizeof(init_val)), //
-			val(init_val) {
+			eeprom_pos(id * sizeof(unsigned long)) {
+
+		// Initiate value form EEPROM
+		eepromLoad();
 	}
 
 	void set(unsigned long new_val);
 
-	unsigned long get();
+	unsigned long get() const;
 
-	void eepromSave();
+	void eepromSave() const;
 
 	void eepromLoad();
 

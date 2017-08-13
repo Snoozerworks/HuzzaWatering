@@ -28,20 +28,16 @@ MachineState::MachineState() {
 	params[PRM::ADC3] = &adc3;
 	params[PRM::ADC4] = &adc4;
 
-	p1 = new Pump(PINS::PUMP1, &p1_flow, &p1_rqst_vol, &pumped1, &ontime); // Pump 1
-	p2 = new Pump(PINS::PUMP2, &p2_flow, &p2_rqst_vol, &pumped2, &ontime); // Pump 2
-	p3 = new Pump(PINS::PUMP3, &p3_flow, &p3_rqst_vol, &pumped3, &ontime); // Pump 3
+	// Init requested volume to 0
+	p1_rqst_vol.set(0);
+	p2_rqst_vol.set(0);
+	p3_rqst_vol.set(0);
 
-//	// Init requested volume to 0
-//	p1_rqst_vol.set(0);
-//	p2_rqst_vol.set(0);
-//	p3_rqst_vol.set(0);
-//
-//	// Init ADC values to 0
-//	adc1.set(0);
-//	adc2.set(0);
-//	adc3.set(0);
-//	adc4.set(0);
+	// Init ADC values to 0
+	adc1.set(0);
+	adc2.set(0);
+	adc3.set(0);
+	adc4.set(0);
 }
 
 /**
@@ -92,6 +88,7 @@ bool MachineState::parseParamGetRequest(WiFiClient * const stream) {
 bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 	unsigned int read_length;
 	unsigned long val;
+	int stream_data;
 	prmid_t prm_id;
 	byte msg_buffer[4];
 
@@ -103,7 +100,14 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 	Serial.print("\t(Prm,Val)=");
 	while (stream->available()) {
 		// Extract parameter
-		prm_id = stream->read();
+		stream_data = stream->read();
+
+		if (stream_data < 0) {
+			reportFault(99, "Nodata? ");
+			continue;
+		}
+
+		prm_id = (prmid_t) stream_data;
 
 		if (prm_id >= PRM::_END) {
 			// Unknown parameter
@@ -136,13 +140,15 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 		val += msg_buffer[2] << 8;
 		val += msg_buffer[3];
 
-		Serial.print('(');
+		(params[prm_id])->set(val);
+
+		Serial.print("(");
 		Serial.print(prm_id, DEC);
 		Serial.print(',');
 		Serial.print(val, DEC);
+		Serial.print(",");
+		Serial.print((params[prm_id])->get(), DEC);
 		Serial.print(") ");
-
-		params[prm_id]->set(val);
 
 		delay(1);
 	}
@@ -241,6 +247,7 @@ void MachineState::uploadToServer() {
  * Download parameters from server
  */
 void MachineState::downloadFromServer() {
+	int stream_data;
 	cmdid_t cmd_id;
 
 	Serial.print("\nDownload");
@@ -273,7 +280,12 @@ void MachineState::downloadFromServer() {
 	while (stream->available()) {
 
 		// Retrive command
-		cmd_id = stream->read();
+		stream_data = stream->read();
+		if (stream_data < 0) {
+			reportFault(99, "Nodata? ");
+			continue;
+		}
+		cmd_id = (cmdid_t) stream_data;
 		Serial.print("\nCmd ");
 		Serial.print(cmd_id, DEC);
 
@@ -297,7 +309,7 @@ void MachineState::downloadFromServer() {
 			break;
 
 		}
-
+		delay(2);
 		yield();
 	}
 
@@ -310,21 +322,13 @@ void MachineState::downloadFromServer() {
  * Call to update state of pumps
  */
 void MachineState::run(unsigned long now) {
-
 	// Run the pumps.
 	yield(); // Let the ESP8266 do its thing too
-//	p1.run(now, tankVolume(), p2.isOn() || p3.isOn());
-	p1->run(now, tankVolume(), p2->isOn() || p3->isOn());
-
+	p1.run(now, tankVolume(), p2.isOn() || p3.isOn());
 	yield(); // Let the ESP8266 do its thing too
-//	p2.run(now, tankVolume(), p3.isOn() || p1.isOn());
-//	p2->run(now, tankVolume(), p3->isOn() || p1->isOn());
-//
-//	yield(); // Let the ESP8266 do its thing too
-//	p3.run(now, tankVolume(), p1.isOn() || p2.isOn());
-//
-//	yield(); // Let the ESP8266 do its thing too
-
+	p2.run(now, tankVolume(), p3.isOn() || p1.isOn());
+	yield(); // Let the ESP8266 do its thing too
+	p3.run(now, tankVolume(), p1.isOn() || p2.isOn());
 }
 
 /**

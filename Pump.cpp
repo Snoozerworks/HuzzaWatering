@@ -31,7 +31,6 @@ unsigned long Pump::getPumpedVolume() const {
 }
 
 /**
-
  * Method starts pump at intervals to deliver the requested flow.
  * If inhibit is true, pump may shut off but not start.
  *
@@ -40,24 +39,34 @@ unsigned long Pump::getPumpedVolume() const {
 void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	unsigned long _ontime;	// Pump ontime per round [s]
 	unsigned long vol;		// Pump volume per round [cc]
+	unsigned long actvol;   // Pump volume per this round  [cc]
 	unsigned long interval;	// Time between two rounds [seconds]
 	unsigned long elapsed;	// Time elapsed since start of last round [ms]
 
 	elapsed = now - onsince;
 
-	// Get pump ontime, volume and interval.
+	// Get pump ontime
 	_ontime = ontime->get();
-	vol = (_ontime * flow->get() + 30) / 60;	// +30 to round.
-	interval = (vol * 86400) / rqst_vol->get();
 
-	// Limit ontime and interv_vol to what remains in tank.
-	if (vol > tank_vol) {
-		_ontime = (tank_vol * 60) / flow->get();
-		vol = tank_vol;
+	// Get pump volume
+	vol = (_ontime * flow->get() + 30) / 60;	// +30 to round.
+	actvol = min(vol, tank_vol); 			// Don't run pump with empty tank
+	actvol = min(actvol, rqst_vol->get());	// Don't pump more than requested
+
+	if (actvol == 0) {
+		// Zero volume to pump
+		onsince = now;
+		interval = -1UL;
+		elapsed = 0;
+		_ontime = 0;
+	} else {
+		// Flow and requested volume is > 0
+		interval = (vol * 86400) / rqst_vol->get();
+		_ontime = (actvol * 60) / flow->get();
 	}
 
-//	Serial.print("1 ");
-	delay(100);
+	// TODO remove delay
+	//delay(100);
 
 	// Switch off pump after _ontime seconds
 	if (isOn() && elapsed >= _ontime * 1000) {
@@ -70,40 +79,18 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 		digitalWrite(p_pin, LOW);
 
 		// Updated pumped volume
-		unsigned long new_vol = pumped_vol->get() + vol;
-		pumped_vol->set(new_vol);
+		pumped_vol->set(pumped_vol->get() + actvol);
 
 		return;
 	}
 
-//	Serial.print("2 ");
-
-//	delay(5);
-//	Serial.print(". ");
-//	// If there is nothing to pump, reset onsince and return
-	if (_ontime == 0) {
-		Serial.print(". ");
-		onsince = now;
-		Serial.print(". ");
-		return;
-	}
-//	Serial.print(". ");
-//
-//	Serial.print("3");
-//	delay(200);
-//
 	// Delay activaion of pump if we should wait
 	if (inhibit) {
-		Serial.print("w");
+		//Serial.print("w");
 		return;
 	}
-//	Serial.print(". ");
-//
-	delay(5);
-//	Serial.print(" 4-");
-	delay(5);
 
-//	// Switch on pump interv_time seconds after last activation.
+	// Switch on pump interv_time seconds after last activation.
 	if (!inhibit && elapsed >= interval * 1000) {
 		Serial.print("\nTurn on pin ");
 		Serial.print(p_pin, DEC);

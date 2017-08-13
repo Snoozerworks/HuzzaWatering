@@ -11,15 +11,20 @@ const unsigned int EEPROM_SIZE = 1024;
  * @param int new_val
  */
 void Parameter::set(unsigned long new_val) {
-	val = _max(_min(new_val, high), low);
-	//	Serial.print("Set prm ");
-	//	Serial.print(prm);
-	//	Serial.print(" at ");
-	//	Serial.print(eeprom_pos);
-	//	Serial.print(" len ");
-	//	Serial.print(sizeof(val));
-	//	Serial.print(" val ");
-	//	Serial.println(val);
+	val = max(min(new_val, high), low);
+//	Serial.print("\nSet prm ");
+//	Serial.print(prm);
+//	Serial.print(" at ");
+//	Serial.print(eeprom_pos);
+//	Serial.print(" len ");
+//	Serial.print(sizeof(val));
+//	Serial.print(" val ");
+//	Serial.print(val, DEC);
+//	Serial.print(" low ");
+//	Serial.print(low, DEC);
+//	Serial.print(" high");
+//	Serial.print(high, DEC);
+//	Serial.println();
 }
 
 /**

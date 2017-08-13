@@ -44,7 +44,7 @@ public:
 	void eepromLoad();
 
 private:
-	prmid_t prm; // Index in parameter array.
+	const prmid_t prm; // Index in parameter array.
 	const unsigned long low; // Upper bound.
 	const unsigned long high; // Lower bound.
 	const unsigned long eeprom_pos; // eeprom offset position

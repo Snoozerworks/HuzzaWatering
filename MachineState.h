@@ -33,12 +33,9 @@ public:
 	Parameter adc3 { PRM::ADC3, 0, 1023UL }; // ADC3 value
 	Parameter adc4 { PRM::ADC4, 0, 1023UL }; // ADC4 value
 
-//	Pump p1 { PINS::PUMP1, &p1_flow, &p1_rqst_vol, &pumped1, &ontime }; // Pump 1
-//	Pump p2 { PINS::PUMP2, &p2_flow, &p2_rqst_vol, &pumped2, &ontime }; // Pump 2
-//	Pump p3 { PINS::PUMP3, &p3_flow, &p3_rqst_vol, &pumped3, &ontime }; // Pump 3
-	Pump *p1;
-	Pump *p2;
-	Pump *p3;
+	Pump p1 { PINS::PUMP1, &p1_flow, &p1_rqst_vol, &pumped1, &ontime }; // Pump 1
+	Pump p2 { PINS::PUMP2, &p2_flow, &p2_rqst_vol, &pumped2, &ontime }; // Pump 2
+	Pump p3 { PINS::PUMP3, &p3_flow, &p3_rqst_vol, &pumped3, &ontime }; // Pump 3
 
 	MachineState();
 

@@ -1,6 +1,7 @@
 // Do not remove the include below
 #include "huzza_watering.h"
 
+#include <EEPROM.h>
 #include "consts_and_types.h"
 #include "MachineState.h"
 
@@ -16,29 +17,32 @@ void onSyncPinInterrupt() {
 
 void setup() {
 	Serial.begin(115200);
-	delay(50);
 	Serial.setDebugOutput(true); 	// On ESP8266, debug with serial
+	EEPROM.begin(EEPROM_SIZE);
+	delay(50);
 
 	// Init values
 	time_last_refresh = -1UL;
 	manual_refresh = false;
+	M.refresh.set(10000);
+
+	// All parameters are initialized to its lower limit. Some should be
+	// read back parameter from EEPROM though.
+	M.pumped1.eepromLoad();
+	M.pumped2.eepromLoad();
+	M.pumped3.eepromLoad();
 
 	// Setup gpio pins
 	pinMode(A0, INPUT);
-
 	pinMode(PINS::SYNC, INPUT);
 	pinMode(PINS::MPX_EN, OUTPUT);
 	pinMode(PINS::MPX_S0, OUTPUT);
 	pinMode(PINS::MPX_S1, OUTPUT);
 	pinMode(PINS::SERVO, OUTPUT);
-
-	digitalWrite(PINS::MPX_EN, HIGH); 	// Disable mutiplexer
-	digitalWrite(PINS::SERVO, LOW);		// Servo signal to 0 volt
-
-	// Set some default values
-	//	M.tankvol.set(0);			// Initiate to empty tank.
-	//	M.run_interval.set(3600); 	// Interval in seconds between pump activations
-	//	M.refresh.set(10000);		// 10 seconds interval for server connections.
+	// Disable mutiplexer
+	digitalWrite(PINS::MPX_EN, HIGH);
+	// Servo signal to 0 volt
+	digitalWrite(PINS::SERVO, LOW);
 
 	// Connecting to a WiFi network
 	Serial.print("\nConnecting ");
@@ -52,7 +56,6 @@ void setup() {
 	Serial.println(WiFi.localIP());
 
 	// Use pin PINS::SYNC as input to synchronize with server directly
-
 	attachInterrupt(digitalPinToInterrupt(PINS::SYNC), onSyncPinInterrupt,
 	FALLING);
 }

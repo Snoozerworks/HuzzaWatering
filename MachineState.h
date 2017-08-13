@@ -10,7 +10,8 @@ class MachineState {
 
 public:
 	//
-	// Define parameters with parameter id, min value and max value
+	// Define parameters with parameter id, min value and max value.
+	// Initial values are loaded from EEPROM.
 	//
 	Parameter p1_rqst_vol { PRM::P1_RQST_VOL, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
 	Parameter p2_rqst_vol { PRM::P2_RQST_VOL, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
@@ -32,6 +33,8 @@ public:
 	Parameter adc2 { PRM::ADC2, 0, 1023UL }; // ADC2 value
 	Parameter adc3 { PRM::ADC3, 0, 1023UL }; // ADC3 value
 	Parameter adc4 { PRM::ADC4, 0, 1023UL }; // ADC4 value
+
+	Parameter last_err { PRM::LAST_ERR, 0, -1UL }; // Last error code
 
 	Pump p1 { PINS::PUMP1, &p1_flow, &p1_rqst_vol, &pumped1, &ontime }; // Pump 1
 	Pump p2 { PINS::PUMP2, &p2_flow, &p2_rqst_vol, &pumped2, &ontime }; // Pump 2
@@ -56,9 +59,9 @@ private:
 
 	unsigned long tankVolume();
 
-	static void printErrorStream(WiFiClient * const stream);
+	void printErrorStream(WiFiClient * const stream);
 
-	static void reportFault(byte err, String err_msg);
+	void reportFault(byte err, String err_msg);
 };
 
 #endif

@@ -28,16 +28,7 @@ MachineState::MachineState() {
 	params[PRM::ADC3] = &adc3;
 	params[PRM::ADC4] = &adc4;
 
-	// Init requested volume to 0
-	p1_rqst_vol.set(0);
-	p2_rqst_vol.set(0);
-	p3_rqst_vol.set(0);
-
-	// Init ADC values to 0
-	adc1.set(0);
-	adc2.set(0);
-	adc3.set(0);
-	adc4.set(0);
+	params[PRM::LAST_ERR] = &last_err;
 }
 
 /**
@@ -161,8 +152,8 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
  * Parameters are sent as a byte stream like;
  * - first 3 bytes is the ESP8266 chip id.
  * - first byte is the command CMD::SET
- * - Then in sequences of five bytes b0 to b4. Byte b0 is the parameter
- * id followed by its value b1 (MSB) to b4.
+ * - Then in sequences of five bytes b0 to b4. Byte b0 is the parameter id
+ *   followed by its value b1 (MSB) to b4.
  * - last byte is the command CMD::NONE
  */
 void MachineState::uploadToServer() {
@@ -209,7 +200,8 @@ void MachineState::uploadToServer() {
 
 	++byteno;
 	if (byteno > sizeof(buffer)) {
-		Serial.print("\n**buffer overrun");
+		reportFault(ERR::BUFFER_OVERRUN, "");
+		//Serial.print("\n**buffer overrun");
 		byteno = sizeof(buffer);
 	}
 
@@ -248,15 +240,21 @@ void MachineState::uploadToServer() {
  */
 void MachineState::downloadFromServer() {
 	int stream_data;
+	int http_code;
 	cmdid_t cmd_id;
 
-	Serial.print("\nDownload");
+	Serial.print("\nDownload ");
 
 	HTTPClient http;
 	http.setTimeout(WIFI::WIFI_RX_TIMEOUT);
-	http.begin(WIFI::download_url);
 
-	int http_code = http.GET();
+	// Include chip id in url query
+	String url = String(WIFI::download_url);
+	url += "?cid=";
+	url += String(ESP.getChipId(), HEX);
+	http.begin(url);
+
+	http_code = http.GET();
 	Serial.print("\nHttp code: ");
 	Serial.print(http_code, DEC);
 
@@ -425,9 +423,12 @@ void MachineState::printErrorStream(WiFiClient * const stream) {
 }
 
 /**
- * For debugging, prints error messages to serial is present.
+ * For debugging, prints error messages to serial and updates the last_err
+ * parameter.
+ *
  */
 void MachineState::reportFault(byte err, String err_msg) {
+	last_err.set(err);
 	if (Serial) {
 		Serial.print("\n**Err ");
 		Serial.print(err, HEX);		// Error code

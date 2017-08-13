@@ -3,9 +3,9 @@
 
 #include "Arduino.h"
 
-/*******************************************
+/**********************************************
  * Type definitions
- *******************************************/
+ **********************************************/
 
 /**
  * Command id
@@ -22,9 +22,13 @@ typedef byte prmid_t;
  */
 typedef byte actid_t;
 
-/*******************************************
- * Keep constants in separate namespaces
- *******************************************/
+/**********************************************
+ * Keep most constants in separate namespaces
+ **********************************************/
+
+// 256 number of unsigned long:s.
+const unsigned int EEPROM_SIZE = 1024;
+
 
 namespace PINS {
 // Analogue pin is not specified here since there is only one choice: A0.
@@ -57,7 +61,8 @@ const prmid_t ADC1 = 0x0D;
 const prmid_t ADC2 = 0x0E;
 const prmid_t ADC3 = 0x0F;
 const prmid_t ADC4 = 0x10;
-const prmid_t _END = 0x11;
+const prmid_t LAST_ERR = 0x11;
+const prmid_t _END = 0x12;
 }
 
 namespace WIFI {
@@ -69,7 +74,7 @@ char const * const download_url =
 		"http://www.skarmflyg.org/_temp/HuzzaWatering/download.php";
 char const * const upload_url =
 		"http://www.skarmflyg.org/_temp/HuzzaWatering/upload.php";
-const unsigned int WIFI_RX_TIMEOUT = 5000;	// 10 seconds
+const unsigned int WIFI_RX_TIMEOUT = 5000;	// 5 seconds
 const byte http_port = 80;
 }
 
@@ -92,7 +97,8 @@ const byte PARAMID_SET_ERR = 0x07;
 const byte PARAMVAL_SET_ERR = 0x08;
 const byte PARAMID_GET_ERR = 0x09;
 const byte NULLPTR_ERR = 0x0A;
-const byte _END = 0x0B;
+const byte BUFFER_OVERRUN = 0x0B;
+const byte _END = 0x0C;
 
 const actid_t NONE = 0x00;
 const actid_t UPLOAD = 0x01;

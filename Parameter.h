@@ -21,18 +21,16 @@ public:
 	bool upload = false;
 
 	/**
-	 * Constructor
+	 * Constructor. Value is initialized to the low limit.
 	 *
 	 * Initialize with parameter id as argument.
 	 */
 	Parameter(prmid_t id, unsigned long lo, unsigned long hi) :
 			prm(id), //
+			val(lo), //
 			low(lo), //
 			high(hi), //
 			eeprom_pos(id * sizeof(unsigned long)) {
-
-		// Initiate value form EEPROM
-		eepromLoad();
 	}
 
 	void set(unsigned long new_val);
@@ -45,10 +43,10 @@ public:
 
 private:
 	const prmid_t prm; // Index in parameter array.
+	unsigned long val; // Parameter value.
 	const unsigned long low; // Upper bound.
 	const unsigned long high; // Lower bound.
 	const unsigned long eeprom_pos; // eeprom offset position
-	unsigned long val; // Parameter value.
 
 };
 

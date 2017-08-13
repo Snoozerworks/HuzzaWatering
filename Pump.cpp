@@ -65,9 +65,6 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 		_ontime = (actvol * 60) / flow->get();
 	}
 
-	// TODO remove delay
-	//delay(100);
-
 	// Switch off pump after _ontime seconds
 	if (isOn() && elapsed >= _ontime * 1000) {
 		Serial.print("Turn off pin ");
@@ -81,6 +78,8 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 		// Updated pumped volume
 		pumped_vol->set(pumped_vol->get() + actvol);
 
+		Serial.print("\nSave pumped...");
+		pumped_vol->eepromSave();
 		return;
 	}
 

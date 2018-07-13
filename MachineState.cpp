@@ -35,7 +35,7 @@ MachineState::MachineState() {
  * Parse stream for parameter values to get. Returns true on success.
  * Each byte in the stream should correspond to the parameter id to
  * get. An ending parameter value of NONE ends the request for parameters.
- * Method sets the upoad flag of the parameter to send.
+ * Method sets the upload flag of parameters to send.
  */
 bool MachineState::parseParamGetRequest(WiFiClient * const stream) {
 	prmid_t prm_id;
@@ -150,15 +150,16 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
  * Upload flagged parameters to server.
  *
  * Parameters are sent as a byte stream like;
- * - first 3 bytes is the ESP8266 chip id.
- * - first byte is the command CMD::SET
- * - Then in sequences of five bytes b0 to b4. Byte b0 is the parameter id
- *   followed by its value b1 (MSB) to b4.
- * - last byte is the command CMD::NONE
+ * - 3 bytes; ESP8266 chip id.
+ * - 1 byte; Command CMD::SET
+ * - 5xN bytes; In sequence b0 to b4. Byte b0 is the parameter id followed by
+ *   its value b1 (MSB) to b4.
+ * - 1 byte; Command CMD::NONE
  */
 void MachineState::uploadToServer() {
 	const unsigned short content_lenght = (PRM::_END - 1) * 5 + 5;
 	byte buffer[content_lenght];
+	bool resetLastErr = false;
 	unsigned long val;
 	unsigned short byteno;
 	HTTPClient http;
@@ -183,6 +184,11 @@ void MachineState::uploadToServer() {
 	for (byte k = 0; k < PRM::_END; k++) {
 		if (params[k] && params[k]->upload) {
 
+			if (k == PRM::LAST_ERR) {
+				// Last error code should be reset if successfully uploaded.
+				resetLastErr = true;
+			}
+
 			readADC(k); 	// Read ADC values (only for related parameters)
 
 			params[k]->upload = false;
@@ -205,8 +211,8 @@ void MachineState::uploadToServer() {
 		byteno = sizeof(buffer);
 	}
 
-	// No parameters to be sent if not more than 2 bytes
-	if (byteno > 2) {
+	// Send parameters if there are at least 5 bytes in the buffer.
+	if (byteno > 4) {
 		int http_code = http.POST((uint8_t *) buffer, (size_t) byteno);
 
 		Serial.print("\nHttp code: ");
@@ -219,6 +225,12 @@ void MachineState::uploadToServer() {
 			Serial.print(", **failed");
 
 		} else {
+			// Reset last error if uploadad
+			if (resetLastErr) {
+				reportFault(ERR::NOERR, "");
+			}
+
+			// Print response
 			String response_str;
 			WiFiClient client = http.getStream();
 			while (client.available()) {
@@ -280,7 +292,7 @@ void MachineState::downloadFromServer() {
 		// Retrive command
 		stream_data = stream->read();
 		if (stream_data < 0) {
-			reportFault(99, "Nodata? ");
+			reportFault(ERR::EMPTY_INSTREAM, "Nodata? ");
 			continue;
 		}
 		cmd_id = (cmdid_t) stream_data;

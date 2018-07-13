@@ -10,17 +10,17 @@
 /**
  * Command id
  */
-typedef byte cmdid_t;
+typedef uint8_t cmdid_t;
 
 /**
  * Paramater id
  */
-typedef byte prmid_t;
+typedef uint8_t prmid_t;
 
 /**
  * Action id
  */
-typedef byte actid_t;
+typedef uint8_t actid_t;
 
 /**********************************************
  * Keep most constants in separate namespaces
@@ -29,17 +29,16 @@ typedef byte actid_t;
 // 256 number of unsigned long:s.
 const unsigned int EEPROM_SIZE = 1024;
 
-
 namespace PINS {
 // Analogue pin is not specified here since there is only one choice: A0.
-const byte SYNC = 13;	// Digital in marked "din"
-const byte PUMP1 = 12;	// PWM pump 1
-const byte PUMP2 = 14;	// PWM pump 2
-const byte PUMP3 = 15;	// PWM pump 3
-const byte SERVO = 5; 	// PWM servo 3,3V signal
-const byte MPX_EN = 0; 	// Mutiplexor enable
-const byte MPX_S0 = 2; 	// Mutiplexor S0
-const byte MPX_S1 = 4; 	// Mutiplexor S1
+const uint8_t SYNC = 13;	// Digital in marked "din"
+const uint8_t PUMP1 = 12;	// PWM pump 1
+const uint8_t PUMP2 = 14;	// PWM pump 2
+const uint8_t PUMP3 = 15;	// PWM pump 3
+const uint8_t SERVO = 5; 	// PWM servo 3,3V signal
+const uint8_t MPX_EN = 0; 	// Mutiplexor enable
+const uint8_t MPX_S0 = 2; 	// Mutiplexor S0
+const uint8_t MPX_S1 = 4; 	// Mutiplexor S1
 }
 
 namespace PRM {
@@ -68,14 +67,12 @@ const prmid_t _END = 0x12;
 namespace WIFI {
 // Constants for wifi connection
 char const * const ssid = "Gris";
-char const* const password = "isterband";
-char const * const host = "www.skarmflyg.org";
-char const * const download_url =
-		"http://www.skarmflyg.org/_temp/HuzzaWatering/download.php";
-char const * const upload_url =
-		"http://www.skarmflyg.org/_temp/HuzzaWatering/upload.php";
+char const * const password = "isterband";
+char const * const host = "skarmflyg.org";
+char const * const download_url = "http://skarmflyg.org/hw/download.php";
+char const * const upload_url = "http://skarmflyg.org/hw/upload.php";
 const unsigned int WIFI_RX_TIMEOUT = 5000;	// 5 seconds
-const byte http_port = 80;
+const uint8_t http_port = 80;
 }
 
 namespace CMD {
@@ -98,6 +95,7 @@ const byte PARAMVAL_SET_ERR = 0x08;
 const byte PARAMID_GET_ERR = 0x09;
 const byte NULLPTR_ERR = 0x0A;
 const byte BUFFER_OVERRUN = 0x0B;
+const byte EMPTY_INSTREAM = 0x0C;
 const byte _END = 0x0C;
 
 const actid_t NONE = 0x00;

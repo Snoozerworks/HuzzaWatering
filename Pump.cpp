@@ -4,7 +4,7 @@
 /**
  * Constructor
  */
-Pump::Pump(byte const pin, //
+Pump::Pump(uint8_t const pin, //
 		Parameter const * const flow_prm, //
 		Parameter const * const rqst_vol_prm, //
 		Parameter * const accum_vol_prm, //

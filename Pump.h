@@ -6,7 +6,7 @@
 
 class Pump {
 private:
-	const byte p_pin;
+	const uint8_t p_pin;
 
 public:
 	Parameter const * const flow;		// Pump flow capacity in cc/min

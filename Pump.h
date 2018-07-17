@@ -12,7 +12,7 @@ public:
 	Parameter const * const flow;		// Pump flow capacity in cc/min
 	Parameter const * const rqst_vol;	// Requested volume in cc per day
 	Parameter * pumped_vol;	// Pumped volume in cc
-	Parameter const * const ontime;		// Pump ontime per round in seconds
+	Parameter const * const ontime;		// Max pump ontime per round in seconds
 	unsigned long onsince;	// Last time of pump activation.
 
 	Pump(byte const pin, //

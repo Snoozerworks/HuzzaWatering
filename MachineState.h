@@ -57,7 +57,7 @@ private:
 
 	void readADC(prmid_t pid);
 
-	unsigned long remainingTankVolume();
+	unsigned int remainingTankVolume();
 
 	void printErrorStream(WiFiClient * const stream);
 

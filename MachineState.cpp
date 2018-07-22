@@ -401,9 +401,9 @@ void MachineState::readADC(prmid_t pid) {
  * Returns volume left in tank.
  * Subtracts pumped volumes from tank volume.
  */
-unsigned long MachineState::remainingTankVolume() {
-	unsigned long pumped = pumped1.get() + pumped2.get() + pumped3.get();
-	unsigned long tsize = tanksize.get();
+unsigned int MachineState::remainingTankVolume() {
+	unsigned int pumped = pumped1.get() + pumped2.get() + pumped3.get();
+	unsigned int tsize = tanksize.get();
 	return (pumped < tsize) ? tsize - pumped : 0;
 }
 

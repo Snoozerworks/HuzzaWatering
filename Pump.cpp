@@ -2,22 +2,6 @@
 #include "Pump.h"
 
 /**
- * Constructor
- */
-Pump::Pump(byte const pin, //
-		Parameter const * const flow_capacity_prm, //
-		Parameter const * const flow_request_prm, //
-		Parameter * const accum_vol_prm, //
-		Parameter const * const ontime_prm) :
-		p_pin(pin), flow_capacity(flow_capacity_prm), flow_request(
-				flow_request_prm), pumped_vol(accum_vol_prm), round_runtime_max(
-				ontime_prm), last_switch_on(-1UL) {
-
-	pinMode(pin, OUTPUT);
-	digitalWrite(pin, LOW);
-}
-
-/**
  * Returns true if pump is running
  */
 bool Pump::isOn() const {
@@ -37,75 +21,64 @@ unsigned long Pump::getPumpedVolume() const {
  *
  * tbd Returns true when pump is switched off, i.e.
  */
-void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
-	unsigned long _ontime;	// Pump ontime per round [s]
-	unsigned long vol;		// Pump volume per round [cc]
-	unsigned long actvol;   // Pump volume per this round  [cc]
-	unsigned long interval;	// Time between two rounds [seconds]
-	unsigned long elapsed;	// Time elapsed since start of round [ms]
+void Pump::run(unsigned long now, unsigned int tank_vol, bool inhibit) {
+	unsigned long elapsed_s;	// Time elapsed since last start of pump [ms]
+	unsigned int delivered_vol; // Delivered pump volume this round  [cc]
+	unsigned int v_accum;		// Accumulated need to pump [cc].
+	unsigned int v_round;		// Pumping volume per round [cc].
 
-	elapsed = now - last_switch_on;
+	elapsed_s = (now - last_switch_on) / 1000;
 
-	// Get pump ontime
-	_ontime = round_runtime_max->get();
+	if (isOn()) {
+		// Pump is started...
 
-	// Get pump volume for the round
-	vol = (_ontime * flow_capacity->get() + 30) / 60; // Volume per period [cc]. Term +30 to round instead of truncate.
-	actvol = min(vol, tank_vol); 		// Limit volume to what's left in tank.
-	actvol = min(actvol, flow_request->get()); // Limit volume to what's requested.
+		// Stop pump if it is inhibited, tank is empty or round volume reached.
+		if (inhibit || tank_vol == 0 || elapsed_s > runtime) {
+			Serial.print("Turn off pin ");
+			Serial.print(p_pin, DEC);
+			Serial.print(", elapsed [ms]=");
+			Serial.print(elapsed_s, DEC);
 
-	if (actvol == 0) {
-		// Zero volume to pump
-		last_switch_on = now;
-		interval = -1UL;
-		elapsed = 0;
-		_ontime = 0;
+			// Turn off pump
+			digitalWrite(p_pin, LOW);
+
+			// Update pumped volume
+			delivered_vol = (elapsed_s * flow_capacity->get()) / 60;
+			pumped_vol->set(pumped_vol->get() + delivered_vol);
+			pumped_vol->eepromSave();
+		}
+
 	} else {
-		// Flow and requested volume is > 0
-		interval = (vol * 86400) / flow_request->get(); // Pump round interval [s].
-		_ontime = getPumpTimeMs(actvol) / 1000; // Ontime per pump round [s].
-	}
+		// Pump is stopped...
 
-	// Switch off pump after _ontime seconds
-	if (isOn() && elapsed >= _ontime * 1000) {
-		Serial.print("Turn off pin ");
-		Serial.print(p_pin, DEC);
-		Serial.print(", elapsed=");
-		Serial.print(elapsed, DEC);
+		// Don't start the pump if it is inhibited or tank is empty.
+		if (inhibit || tank_vol == 0) {
+			return;
+		}
 
-		// Turn off pump
-		digitalWrite(p_pin, LOW);
+		v_accum = (elapsed_s * flow_request->get()) / 86400;
+		v_round = (round_runtime->get() * flow_capacity->get()) / 60;
 
-		// Updated pumped volume
-		pumped_vol->set(pumped_vol->get() + actvol);
+		// Start pump if not inhibited, accumulated need exceeds the round
+		// volume and tank is not empty.
+		if (v_accum > v_round) {
+			Serial.print("\nTurn on pin ");
+			Serial.print(p_pin, DEC);
+			Serial.print(", ontime=");
+			Serial.print(runtime, DEC);
+			Serial.print(", vol=");
+			Serial.print(v_accum, DEC);
 
-		Serial.print("\nSave pumped...");
-		pumped_vol->eepromSave();
-		return;
-	}
+			// Turn on pump
+			digitalWrite(p_pin, HIGH);
 
-	// Delay activaion of pump if we should wait
-	if (inhibit) {
-		//Serial.print("w");
-		return;
-	}
+			// Updated time of last pump start.
+			last_switch_on = now;
 
-	// Switch on pump interv_time seconds after last activation.
-	if (elapsed >= interval * 1000) {
-		Serial.print("\nTurn on pin ");
-		Serial.print(p_pin, DEC);
-		Serial.print(", ontime=");
-		Serial.print(_ontime, DEC);
-		Serial.print(", vol=");
-		Serial.print(vol, DEC);
-		Serial.print(", interval=");
-		Serial.print(interval, DEC);
+			// Update runtime
+			runtime = getPumpTime(v_accum);
+		}
 
-		// Turn on pump
-		digitalWrite(p_pin, HIGH);
-
-		// Save time when pump turned on
-		last_switch_on = now;
 	}
 
 }
@@ -115,12 +88,10 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
  ***************/
 
 /**
- * Returns time in ms to keep pump on to deliver a volume v in cc.
+ * Returns time [s] required for pump to deliver a volume v [cc].
  *
  * @param v Volume in cc.
  */
-unsigned int Pump::getPumpTimeMs(unsigned int v) const {
-	// Calculate the duration in ms for the the pump to be on.
-	return (v * 60000) / flow_capacity->get();
+unsigned int Pump::getPumpTime(unsigned int vol) const {
+	return (vol * 60) / flow_capacity->get();
 }
-

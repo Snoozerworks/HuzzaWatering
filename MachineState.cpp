@@ -7,13 +7,13 @@
  * Constructor
  */
 MachineState::MachineState() {
-	params[PRM::P1_RQST_VOL] = &p1_rqst_vol;
-	params[PRM::P2_RQST_VOL] = &p2_rqst_vol;
-	params[PRM::P3_RQST_VOL] = &p3_rqst_vol;
+	params[PRM::P1_FLOW_REQUEST] = &p1_flow_request;
+	params[PRM::P2_FLOW_REQUEST] = &p2_flow_request;
+	params[PRM::P3_FLOW_REQUEST] = &p3_flow_request;
 
-	params[PRM::P1_FLOW] = &p1_flow;
-	params[PRM::P2_FLOW] = &p2_flow;
-	params[PRM::P3_FLOW] = &p3_flow;
+	params[PRM::P1_FLOW_CAPACITY] = &p1_flow_capacity;
+	params[PRM::P2_FLOW_CAPACITY] = &p2_flow_capacity;
+	params[PRM::P3_FLOW_CAPACITY] = &p3_flow_capacity;
 
 	params[PRM::P1_PUMPED_VOL] = &pumped1;
 	params[PRM::P2_PUMPED_VOL] = &pumped2;

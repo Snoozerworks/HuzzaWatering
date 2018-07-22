@@ -13,13 +13,13 @@ public:
 	// Define parameters with parameter id, min value and max value.
 	// Initial values are loaded from EEPROM.
 	//
-	Parameter p1_rqst_vol { PRM::P1_RQST_VOL, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
-	Parameter p2_rqst_vol { PRM::P2_RQST_VOL, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
-	Parameter p3_rqst_vol { PRM::P3_RQST_VOL, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
+	Parameter p1_flow_request { PRM::P1_FLOW_REQUEST, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
+	Parameter p2_flow_request { PRM::P2_FLOW_REQUEST, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
+	Parameter p3_flow_request { PRM::P3_FLOW_REQUEST, 0, 1000000UL }; // Requested flow in cc per day. Max 500 cc
 
-	Parameter p1_flow { PRM::P1_FLOW, 1, 1000UL }; // Pump flow capacity cc/min
-	Parameter p2_flow { PRM::P2_FLOW, 1, 1000UL }; // Pump flow capacity cc/min
-	Parameter p3_flow { PRM::P3_FLOW, 1, 1000UL }; // Pump flow capacity cc/min
+	Parameter p1_flow_capacity { PRM::P1_FLOW_CAPACITY, 1, 1000UL }; // Pump flow capacity cc/min
+	Parameter p2_flow_capacity { PRM::P2_FLOW_CAPACITY, 1, 1000UL }; // Pump flow capacity cc/min
+	Parameter p3_flow_capacity { PRM::P3_FLOW_CAPACITY, 1, 1000UL }; // Pump flow capacity cc/min
 
 	Parameter pumped1 { PRM::P1_PUMPED_VOL, 0, -1UL }; // Pumped volume in cc
 	Parameter pumped2 { PRM::P2_PUMPED_VOL, 0, -1UL }; // Pumped volume in cc
@@ -36,9 +36,9 @@ public:
 
 	Parameter last_err { PRM::LAST_ERR, 0, -1UL }; // Last error code
 
-	Pump p1 { PINS::PUMP1, &p1_flow, &p1_rqst_vol, &pumped1, &ontime }; // Pump 1
-	Pump p2 { PINS::PUMP2, &p2_flow, &p2_rqst_vol, &pumped2, &ontime }; // Pump 2
-	Pump p3 { PINS::PUMP3, &p3_flow, &p3_rqst_vol, &pumped3, &ontime }; // Pump 3
+	Pump p1 { PINS::PUMP1, &p1_flow_capacity, &p1_flow_request, &pumped1, &ontime }; // Pump 1
+	Pump p2 { PINS::PUMP2, &p2_flow_capacity, &p2_flow_request, &pumped2, &ontime }; // Pump 2
+	Pump p3 { PINS::PUMP3, &p3_flow_capacity, &p3_flow_request, &pumped3, &ontime }; // Pump 3
 
 	MachineState();
 

@@ -44,12 +44,12 @@ const uint8_t MPX_S1 = 4; 	// Mutiplexor S1
 namespace PRM {
 // Indentifiers for parameters which can be set or get
 const prmid_t NONE = 0x00;
-const prmid_t P1_FLOW = 0x01;
-const prmid_t P2_FLOW = 0x02;
-const prmid_t P3_FLOW = 0x03;
-const prmid_t P1_RQST_VOL = 0x04;
-const prmid_t P2_RQST_VOL = 0x05;
-const prmid_t P3_RQST_VOL = 0x06;
+const prmid_t P1_FLOW_CAPACITY = 0x01;
+const prmid_t P2_FLOW_CAPACITY = 0x02;
+const prmid_t P3_FLOW_CAPACITY = 0x03;
+const prmid_t P1_FLOW_REQUEST = 0x04;
+const prmid_t P2_FLOW_REQUEST = 0x05;
+const prmid_t P3_FLOW_REQUEST = 0x06;
 const prmid_t P1_PUMPED_VOL = 0x07;
 const prmid_t P2_PUMPED_VOL = 0x08;
 const prmid_t P3_PUMPED_VOL = 0x09;

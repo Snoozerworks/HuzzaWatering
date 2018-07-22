@@ -61,9 +61,11 @@ void setup() {
 }
 
 void loop() {
+	bool auto_refresh;
 	now = millis();
+	auto_refresh = now - time_last_refresh > M.refresh.get();
 
-	if ((now - time_last_refresh > M.refresh.get()) || manual_refresh) {
+	if (auto_refresh || manual_refresh) {
 		// Get parameters from server at intervals set by the refresh rate
 		// or when input PINS:SYNC switch off.
 		Serial.println("\nRefresh");

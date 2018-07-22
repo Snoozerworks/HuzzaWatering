@@ -336,11 +336,11 @@ void MachineState::downloadFromServer() {
 void MachineState::run(unsigned long now) {
 	// Run the pumps.
 	yield(); // Let the ESP8266 do its thing too
-	p1.run(now, remainingTankVolume(), p2.isOn() || p3.isOn());
+	p1.run(now, remainingTankVolume()==0 || p2.isOn() || p3.isOn());
 	yield(); // Let the ESP8266 do its thing too
-	p2.run(now, remainingTankVolume(), p3.isOn() || p1.isOn());
+	p2.run(now, remainingTankVolume()==0 || p3.isOn() || p1.isOn());
 	yield(); // Let the ESP8266 do its thing too
-	p3.run(now, remainingTankVolume(), p1.isOn() || p2.isOn());
+	p3.run(now, remainingTankVolume()==0 || p1.isOn() || p2.isOn());
 }
 
 /**

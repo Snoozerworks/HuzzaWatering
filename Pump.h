@@ -35,7 +35,7 @@ public:
 
 	unsigned long getPumpedVolume() const;
 
-	void run(unsigned long now, unsigned int tank_vol, bool inhibit);
+	void run(unsigned long now, bool inhibit);
 
 private:
 

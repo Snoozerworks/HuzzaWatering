@@ -21,7 +21,7 @@ unsigned long Pump::getPumpedVolume() const {
  *
  * tbd Returns true when pump is switched off, i.e.
  */
-void Pump::run(unsigned long now, unsigned int tank_vol, bool inhibit) {
+void Pump::run(unsigned long now, bool inhibit) {
 	unsigned long elapsed_s;	// Time elapsed since last start of pump [ms]
 	unsigned int delivered_vol; // Delivered pump volume this round  [cc]
 	unsigned int v_accum;		// Accumulated need to pump [cc].
@@ -32,11 +32,11 @@ void Pump::run(unsigned long now, unsigned int tank_vol, bool inhibit) {
 	if (isOn()) {
 		// Pump is started...
 
-		// Stop pump if it is inhibited, tank is empty or round volume reached.
-		if (inhibit || tank_vol == 0 || elapsed_s > runtime) {
-			Serial.print("Turn off pin ");
+		// Stop pump if it is inhibited or runtime seconds has elapsed.
+		if (inhibit || elapsed_s > runtime) {
+			Serial.print("\nTurn off pin ");
 			Serial.print(p_pin, DEC);
-			Serial.print(", elapsed [ms]=");
+			Serial.print(", elapsed [s]=");
 			Serial.print(elapsed_s, DEC);
 
 			// Turn off pump
@@ -51,22 +51,17 @@ void Pump::run(unsigned long now, unsigned int tank_vol, bool inhibit) {
 	} else {
 		// Pump is stopped...
 
-		// Don't start the pump if it is inhibited or tank is empty.
-		if (inhibit || tank_vol == 0) {
-			return;
-		}
-
 		v_accum = (elapsed_s * flow_request->get()) / 86400;
 		v_round = (round_runtime->get() * flow_capacity->get()) / 60;
 
-		// Start pump if not inhibited, accumulated need exceeds the round
-		// volume and tank is not empty.
-		if (v_accum > v_round) {
+		// Start pump if not inhibited and accumulated need exceeds the round
+		// volume.
+		if (!inhibit && v_accum > v_round) {
 			Serial.print("\nTurn on pin ");
 			Serial.print(p_pin, DEC);
-			Serial.print(", ontime=");
+			Serial.print(", runtime [s]=");
 			Serial.print(runtime, DEC);
-			Serial.print(", vol=");
+			Serial.print(", volume=");
 			Serial.print(v_accum, DEC);
 
 			// Turn on pump

@@ -4,13 +4,13 @@
 /**
  * Constructor
  */
-Pump::Pump(uint8_t const pin, //
-		Parameter const * const flow_capacity_prm, //
-		Parameter const * const flow_request_prm, //
+Pump::Pump(byte const pin, //
+		Parameter const * const flow_prm, //
+		Parameter const * const rqst_vol_prm, //
 		Parameter * const accum_vol_prm, //
-		Parameter const * const interval_prm) :
-		p_pin(pin), flow_capacity(flow_capacity_prm), flow_request(flow_request_prm), pumped_vol(
-				accum_vol_prm), ontime(interval_prm), onsince(-1UL) {
+		Parameter const * const ontime_prm) :
+		p_pin(pin), flow(flow_prm), rqst_vol(rqst_vol_prm), pumped_vol(
+				accum_vol_prm), ontime(ontime_prm), onsince(-1UL) {
 
 	pinMode(pin, OUTPUT);
 	digitalWrite(pin, LOW);
@@ -38,7 +38,7 @@ unsigned long Pump::getPumpedVolume() const {
  */
 void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	unsigned long _ontime;	// Pump ontime per round [s]
-	unsigned long vol;		// Pump volume per round [cc]
+	unsigned long vol;		 // Pump volume per round [cc]
 	unsigned long actvol;   // Pump volume per this round  [cc]
 	unsigned long interval;	// Time between two rounds [seconds]
 	unsigned long elapsed;	// Time elapsed since start of last round [ms]
@@ -49,9 +49,9 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	_ontime = ontime->get();
 
 	// Get pump volume
-	vol = (_ontime * flow_capacity->get() + 30) / 60;	// +30 to round.
-	actvol = min(vol, tank_vol); 			// Don't run pump with empty tank
-	actvol = min(actvol, flow_request->get());	// Don't pump more than requested
+	vol = (_ontime * flow->get() + 30) / 60;	// cc per one period. Term +30 to round instead of truncate.
+	actvol = min(vol, tank_vol); 			// Limit volume to what's left in tank.
+	actvol = min(actvol, rqst_vol->get());	// Limit volume to what's requested.
 
 	if (actvol == 0) {
 		// Zero volume to pump
@@ -61,8 +61,8 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 		_ontime = 0;
 	} else {
 		// Flow and requested volume is > 0
-		interval = (vol * 86400) / flow_request->get();
-		_ontime = (actvol * 60) / flow_capacity->get();
+		interval = (vol * 86400) / rqst_vol->get(); // Pump round interval.
+		_ontime = (actvol * 60) / flow->get();      // Ontime per pump round. 
 	}
 
 	// Switch off pump after _ontime seconds
@@ -90,7 +90,7 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	}
 
 	// Switch on pump interv_time seconds after last activation.
-	if (!inhibit && elapsed >= interval * 1000) {
+	if (elapsed >= interval * 1000) {
 		Serial.print("\nTurn on pin ");
 		Serial.print(p_pin, DEC);
 		Serial.print(", ontime=");
@@ -118,6 +118,6 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
  */
 unsigned int Pump::getPumpTime(unsigned int v) const {
 	// Calculate the duration in ms for the the pump to be on.
-	return (v * 60000) / flow_capacity->get();
+	return (v * 60000) / flow->get();
 }
 

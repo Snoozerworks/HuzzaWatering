@@ -23,7 +23,7 @@ void setup() {
 
 	// Init values
 	time_last_refresh = -1UL;
-	manual_refresh = false;
+	manual_refresh = true;
 	M.refresh.set(10000);
 
 	// All parameters are initialized to its lower limit. Some should be

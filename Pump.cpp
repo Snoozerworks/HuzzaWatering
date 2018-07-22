@@ -33,7 +33,7 @@ void Pump::run(unsigned long now, bool inhibit) {
 		// Pump is started...
 
 		// Stop pump if it is inhibited or runtime seconds has elapsed.
-		if (inhibit || elapsed_s > runtime) {
+		if (inhibit || elapsed_s >= runtime) {
 			Serial.print("\nTurn off pin ");
 			Serial.print(p_pin, DEC);
 			Serial.print(", elapsed [s]=");

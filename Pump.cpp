@@ -10,8 +10,8 @@ Pump::Pump(byte const pin, //
 		Parameter * const accum_vol_prm, //
 		Parameter const * const ontime_prm) :
 		p_pin(pin), flow_capacity(flow_capacity_prm), flow_request(
-				flow_request_prm), pumped_vol(accum_vol_prm), ontime(
-				ontime_prm), onsince(-1UL) {
+				flow_request_prm), pumped_vol(accum_vol_prm), round_runtime_max(
+				ontime_prm), last_switch_on(-1UL) {
 
 	pinMode(pin, OUTPUT);
 	digitalWrite(pin, LOW);
@@ -42,28 +42,28 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	unsigned long vol;		// Pump volume per round [cc]
 	unsigned long actvol;   // Pump volume per this round  [cc]
 	unsigned long interval;	// Time between two rounds [seconds]
-	unsigned long elapsed;	// Time elapsed since start of last round [ms]
+	unsigned long elapsed;	// Time elapsed since start of round [ms]
 
-	elapsed = now - onsince;
+	elapsed = now - last_switch_on;
 
 	// Get pump ontime
-	_ontime = ontime->get();
+	_ontime = round_runtime_max->get();
 
-	// Get pump volume
-	vol = (_ontime * flow_capacity->get() + 30) / 60;// cc per one period. Term +30 to round instead of truncate.
+	// Get pump volume for the round
+	vol = (_ontime * flow_capacity->get() + 30) / 60; // Volume per period [cc]. Term +30 to round instead of truncate.
 	actvol = min(vol, tank_vol); 		// Limit volume to what's left in tank.
-	actvol = min(actvol, flow_request->get());	// Limit volume to what's requested.
+	actvol = min(actvol, flow_request->get()); // Limit volume to what's requested.
 
 	if (actvol == 0) {
 		// Zero volume to pump
-		onsince = now;
+		last_switch_on = now;
 		interval = -1UL;
 		elapsed = 0;
 		_ontime = 0;
 	} else {
 		// Flow and requested volume is > 0
-		interval = (vol * 86400) / flow_request->get(); // Pump round interval.
-		_ontime = (actvol * 60) / flow_capacity->get();      // Ontime per pump round.
+		interval = (vol * 86400) / flow_request->get(); // Pump round interval [s].
+		_ontime = getPumpTimeMs(actvol) / 1000; // Ontime per pump round [s].
 	}
 
 	// Switch off pump after _ontime seconds
@@ -105,7 +105,7 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 		digitalWrite(p_pin, HIGH);
 
 		// Save time when pump turned on
-		onsince = now;
+		last_switch_on = now;
 	}
 
 }
@@ -116,8 +116,10 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 
 /**
  * Returns time in ms to keep pump on to deliver a volume v in cc.
+ *
+ * @param v Volume in cc.
  */
-unsigned int Pump::getPumpTime(unsigned int v) const {
+unsigned int Pump::getPumpTimeMs(unsigned int v) const {
 	// Calculate the duration in ms for the the pump to be on.
 	return (v * 60000) / flow_capacity->get();
 }

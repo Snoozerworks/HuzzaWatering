@@ -9,17 +9,26 @@ private:
 	const uint8_t p_pin;
 
 public:
-	Parameter const * const flow_capacity;		// Pump flow capacity in cc/min
+	Parameter const * const flow_capacity;	// Pump flow capacity in cc/min
 	Parameter const * const flow_request;	// Requested volume in cc per day
-	Parameter * pumped_vol;	// Pumped volume in cc
-	Parameter const * const ontime;		// Max pump ontime per round in seconds
-	unsigned long onsince;	// Last time of pump activation.
+	Parameter * pumped_vol;					// Pumped volume in cc
+	Parameter const * const round_runtime_max;		// Max pump ontime per round in seconds
+	unsigned long last_switch_on;			// Last time of pump activation.
 
-	Pump(byte const pin, //
-			Parameter const * const flow_capacity_prm, //
-			Parameter const * const flow_request_prm, //
-			Parameter * const accum_vol_prm, //
-			Parameter const * const interval_prm);
+	/**
+	 * Constructor
+	 */
+	Pump(const byte pin, //
+			const Parameter* const flow_capacity_prm, //
+			const Parameter* const flow_request_prm, //
+			Parameter* const accum_vol_prm, //
+			const Parameter* const ontime_prm) :
+			p_pin(pin), flow_capacity(flow_capacity_prm), flow_request(
+					flow_request_prm), pumped_vol(accum_vol_prm), round_runtime_max(
+					ontime_prm), last_switch_on(-1UL) {
+		pinMode(pin, OUTPUT);
+		digitalWrite(pin, LOW);
+	}
 
 	bool isOn() const;
 
@@ -31,7 +40,7 @@ public:
 
 private:
 
-	unsigned int getPumpTime(unsigned int v) const;
+	unsigned int getPumpTimeMs(unsigned int v) const;
 
 };
 

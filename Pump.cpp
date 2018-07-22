@@ -5,12 +5,13 @@
  * Constructor
  */
 Pump::Pump(byte const pin, //
-		Parameter const * const flow_prm, //
-		Parameter const * const rqst_vol_prm, //
+		Parameter const * const flow_capacity_prm, //
+		Parameter const * const flow_request_prm, //
 		Parameter * const accum_vol_prm, //
 		Parameter const * const ontime_prm) :
-		p_pin(pin), flow(flow_prm), rqst_vol(rqst_vol_prm), pumped_vol(
-				accum_vol_prm), ontime(ontime_prm), onsince(-1UL) {
+		p_pin(pin), flow_capacity(flow_capacity_prm), flow_request(
+				flow_request_prm), pumped_vol(accum_vol_prm), ontime(
+				ontime_prm), onsince(-1UL) {
 
 	pinMode(pin, OUTPUT);
 	digitalWrite(pin, LOW);
@@ -49,8 +50,8 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	_ontime = ontime->get();
 
 	// Get pump volume
-	vol = (_ontime * flow->get() + 30) / 60;	// cc per one period. Term +30 to round instead of truncate.
-	actvol = min(vol, tank_vol); 			// Limit volume to what's left in tank.
+	vol = (_ontime * flow->get() + 30) / 60;// cc per one period. Term +30 to round instead of truncate.
+	actvol = min(vol, tank_vol); 		// Limit volume to what's left in tank.
 	actvol = min(actvol, rqst_vol->get());	// Limit volume to what's requested.
 
 	if (actvol == 0) {

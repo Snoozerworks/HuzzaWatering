@@ -330,15 +330,17 @@ void MachineState::downloadFromServer() {
 
 /**
  * Call to update state of pumps
+ *
+ * @param now Milliseconds from power on taken at start of each program loop.
  */
 void MachineState::run(unsigned long now) {
 	// Run the pumps.
 	yield(); // Let the ESP8266 do its thing too
-	p1.run(now, tankVolume(), p2.isOn() || p3.isOn());
+	p1.run(now, remainingTankVolume(), p2.isOn() || p3.isOn());
 	yield(); // Let the ESP8266 do its thing too
-	p2.run(now, tankVolume(), p3.isOn() || p1.isOn());
+	p2.run(now, remainingTankVolume(), p3.isOn() || p1.isOn());
 	yield(); // Let the ESP8266 do its thing too
-	p3.run(now, tankVolume(), p1.isOn() || p2.isOn());
+	p3.run(now, remainingTankVolume(), p1.isOn() || p2.isOn());
 }
 
 /**
@@ -396,9 +398,10 @@ void MachineState::readADC(prmid_t pid) {
 }
 
 /**
- * Returns volume left in tank .
+ * Returns volume left in tank.
+ * Subtracts pumped volumes from tank volume.
  */
-unsigned long MachineState::tankVolume() {
+unsigned long MachineState::remainingTankVolume() {
 	unsigned long pumped = pumped1.get() + pumped2.get() + pumped3.get();
 	unsigned long tsize = tanksize.get();
 	return (pumped < tsize) ? tsize - pumped : 0;

@@ -39,7 +39,7 @@ unsigned long Pump::getPumpedVolume() const {
  */
 void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	unsigned long _ontime;	// Pump ontime per round [s]
-	unsigned long vol;		 // Pump volume per round [cc]
+	unsigned long vol;		// Pump volume per round [cc]
 	unsigned long actvol;   // Pump volume per this round  [cc]
 	unsigned long interval;	// Time between two rounds [seconds]
 	unsigned long elapsed;	// Time elapsed since start of last round [ms]

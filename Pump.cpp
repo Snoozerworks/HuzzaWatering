@@ -50,9 +50,9 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	_ontime = ontime->get();
 
 	// Get pump volume
-	vol = (_ontime * flow->get() + 30) / 60;// cc per one period. Term +30 to round instead of truncate.
+	vol = (_ontime * flow_capacity->get() + 30) / 60;// cc per one period. Term +30 to round instead of truncate.
 	actvol = min(vol, tank_vol); 		// Limit volume to what's left in tank.
-	actvol = min(actvol, rqst_vol->get());	// Limit volume to what's requested.
+	actvol = min(actvol, flow_request->get());	// Limit volume to what's requested.
 
 	if (actvol == 0) {
 		// Zero volume to pump
@@ -62,8 +62,8 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 		_ontime = 0;
 	} else {
 		// Flow and requested volume is > 0
-		interval = (vol * 86400) / rqst_vol->get(); // Pump round interval.
-		_ontime = (actvol * 60) / flow->get();      // Ontime per pump round. 
+		interval = (vol * 86400) / flow_request->get(); // Pump round interval.
+		_ontime = (actvol * 60) / flow_capacity->get();      // Ontime per pump round.
 	}
 
 	// Switch off pump after _ontime seconds
@@ -119,6 +119,6 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
  */
 unsigned int Pump::getPumpTime(unsigned int v) const {
 	// Calculate the duration in ms for the the pump to be on.
-	return (v * 60000) / flow->get();
+	return (v * 60000) / flow_capacity->get();
 }
 

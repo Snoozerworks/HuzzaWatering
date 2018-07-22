@@ -5,11 +5,11 @@
  * Constructor
  */
 Pump::Pump(uint8_t const pin, //
-		Parameter const * const flow_prm, //
-		Parameter const * const rqst_vol_prm, //
+		Parameter const * const flow_capacity_prm, //
+		Parameter const * const flow_request_prm, //
 		Parameter * const accum_vol_prm, //
 		Parameter const * const interval_prm) :
-		p_pin(pin), flow(flow_prm), rqst_vol(rqst_vol_prm), pumped_vol(
+		p_pin(pin), flow_capacity(flow_capacity_prm), flow_request(flow_request_prm), pumped_vol(
 				accum_vol_prm), ontime(interval_prm), onsince(-1UL) {
 
 	pinMode(pin, OUTPUT);
@@ -49,9 +49,9 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 	_ontime = ontime->get();
 
 	// Get pump volume
-	vol = (_ontime * flow->get() + 30) / 60;	// +30 to round.
+	vol = (_ontime * flow_capacity->get() + 30) / 60;	// +30 to round.
 	actvol = min(vol, tank_vol); 			// Don't run pump with empty tank
-	actvol = min(actvol, rqst_vol->get());	// Don't pump more than requested
+	actvol = min(actvol, flow_request->get());	// Don't pump more than requested
 
 	if (actvol == 0) {
 		// Zero volume to pump
@@ -61,8 +61,8 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
 		_ontime = 0;
 	} else {
 		// Flow and requested volume is > 0
-		interval = (vol * 86400) / rqst_vol->get();
-		_ontime = (actvol * 60) / flow->get();
+		interval = (vol * 86400) / flow_request->get();
+		_ontime = (actvol * 60) / flow_capacity->get();
 	}
 
 	// Switch off pump after _ontime seconds
@@ -118,6 +118,6 @@ void Pump::run(unsigned long now, unsigned long tank_vol, bool inhibit) {
  */
 unsigned int Pump::getPumpTime(unsigned int v) const {
 	// Calculate the duration in ms for the the pump to be on.
-	return (v * 60000) / flow->get();
+	return (v * 60000) / flow_capacity->get();
 }
 

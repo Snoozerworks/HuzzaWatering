@@ -94,7 +94,7 @@ bool MachineState::parseParamSetRequest(WiFiClient * const stream) {
 		stream_data = stream->read();
 
 		if (stream_data < 0) {
-			reportFault(99, "Nodata? ");
+			reportFault(ERR::EMPTY_INSTREAM, "Nodata? ");
 			continue;
 		}
 
@@ -232,11 +232,17 @@ void MachineState::uploadToServer() {
 
 			// Print response
 			String response_str;
-			WiFiClient client = http.getStream();
-			while (client.available()) {
-				response_str = client.readStringUntil('\n');
+			WiFiClient * stream = http.getStreamPtr();
+			if (stream == nullptr) {
+				reportFault(ERR::NULLPTR_ERR, "");
+				http.end();
+				return;
+			}
+			while (stream->available()) {
+				response_str = stream->readStringUntil('\n');
 				Serial.println(response_str);
 			}
+			stream->flush();
 
 		}
 
@@ -284,6 +290,7 @@ void MachineState::downloadFromServer() {
 	WiFiClient * stream = http.getStreamPtr();
 	if (stream == nullptr) {
 		reportFault(ERR::NULLPTR_ERR, "");
+		http.end();
 		return;
 	}
 
@@ -323,7 +330,7 @@ void MachineState::downloadFromServer() {
 		yield();
 	}
 
-	stream->stop();
+	stream->flush();
 	http.end();
 	Serial.println("\nDone download");
 }
